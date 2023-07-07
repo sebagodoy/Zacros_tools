@@ -14,9 +14,11 @@ except FileNotFoundError as notfound:
 species = {i:[] for i in cont[0].split()[5:]}
 stats = {i:[] for i in cont[0].split()[:5]}
 # Parse
+print('  > parsing data ', end='... ')
 for iLine in cont[1:]:
     [species[i].append(float(j)) for i,j in zip(species, iLine.split()[5:])]
     [stats[i].append(float(j)) for i,j in zip(stats, iLine.split()[:5])]
+print('done!')
 
 #### ---- Plot
 import matplotlib.pyplot as plt
@@ -34,12 +36,12 @@ if not myxaxis in stats:
 plt.xlabel(myxaxis, fontweight='bold')
 
 # numeral markers
-numeralmarkers = input('  > Use numeral markers? (True/def=False) : ') or False
+numeralmarkers = input('  > Use numeral markers? (def=True/False) : ') or True
 
 # plotting
 if numeralmarkers:
     # if all are marked it gets too crowded
-    numberOfMarkers = 15
+    numberOfMarkers = 10
     markEvery = max(int(len(stats[myxaxis])/numberOfMarkers), 1)
     # number markers
     [plt.plot(stats[myxaxis], species[i],

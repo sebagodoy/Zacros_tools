@@ -23,6 +23,7 @@ with open('./simulation_input.dat') as h:
 
 
 # Get coords: site_dict dictionary of sites by index
+print('  > Get lattice ', end='... ')
 lat_cell = [[float(i) for i in latout[j].split()[1:3]] for j in range(2)]
 site_dict = {}
 site_type = {}
@@ -36,10 +37,13 @@ for isite in latout[2:]:
                                  'neighbours': [int(i) for i in isite_[5:] if not i=='0']
                                  }
     nsites += 1
+
 # for debug dictionary of sites by index
-[print(str(i)+' = '+site_dict[i].__str__()) for i in site_dict]; print('-'*80)
+# [print(str(i)+' = '+site_dict[i].__str__()) for i in site_dict]; print('-'*80)
+
 
 # Get coords: site_types dictionary of sites by site type
+print('parsing by site ', end='... ')
 for i in list(site_dict.keys()):
     isite = site_dict[i]
     site_type[isite['site_type']]['x'].append(isite['position'][0])
@@ -51,12 +55,15 @@ for i in list(site_dict.keys()):
 #     [print(str(i)+'-'+str(j)+'='+str(site_type[i][j])) for j in list(site_type[i].keys())]
 #     print('.'*20)
 # print('-'*80)
+print('done!')
 
 # -----------------------------------------------------------------------
 # Read history
+print('  > Reading history ', end='... ')
 with open('./history_output.txt') as h:
     snapfile = h.readlines()
 
+# create dictionaries to parse
 # species dict: {1: SpecieName1, 2: SpecieName2, ... }
 species_dct = {i+1:j for i,j in enumerate(snapfile[1].split()[1:])}
 # species in sites dict: {1: [], 2:[], 3:[] , ...}
@@ -64,11 +71,11 @@ snapspecies = {i:[] for i in list(species_dct.keys())} # {specie number : [site 
 
 
 
-
 # find starting last snap
 iLine = len(snapfile)-1
 while iLine>0 and 'configuration' not in snapfile[iLine]:
     iLine-=1
+print('found last snap', end='... ')
 
 # Fill snapspecies with last snapshot
 try:
@@ -81,11 +88,12 @@ except IndexError:
     print('  > '+'!'*4+' The last snapshot is not complete, check what happened!')
     print('  > ' + '!' * 80)
     quit()
-
+print('got it!')
 
 # ----------------------------------------------------------------------
 # plotting
 import matplotlib.pyplot as plt
+print('  > Plotting sites', end='... ')
 ncolspecies = int(len(species_dct)/8) if int(len(species_dct)/8) > 0 else 1
 fig, ax = plt.subplots(1,1, figsize=(7+1.06*ncolspecies,4.), dpi=80)
 plt.subplots_adjust(left=0.09, right=0.94-.11*ncolspecies+.01*(ncolspecies-1),
@@ -99,6 +107,7 @@ for itype in list(site_type.keys()):
                 alpha=.15, marker='o', s=80, edgecolors='k',
                 zorder=2
                 )
+print('done!')
 
 # add box
 if input('  > Add box (*/def=False) ?: '):
@@ -106,6 +115,7 @@ if input('  > Add box (*/def=False) ?: '):
     plt.plot([i[0] for i in draw_box], [i[1] for i in draw_box], color='k', alpha=.5, linestyle='dashed')
 
 # add species
+print('  >  Plotting species ', end='... ')
 for ispecie in snapspecies:
     if len(snapspecies[ispecie]) == 0:
         pass
@@ -116,6 +126,7 @@ for ispecie in snapspecies:
                     marker='$'+str(ispecie)+'$',
                     s=60, alpha=.9, zorder=4
                     )
+print('done!')
 
 # Titles and legend --------------------------------------------------
 plt.annotate('Species :', xy=(1.02, .95), xycoords='axes fraction',
