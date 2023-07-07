@@ -32,7 +32,24 @@ if not myxaxis in stats:
     print('    '+myxaxis+' ... what?, just using Time instead')
     myxaxis = "Time"
 plt.xlabel(myxaxis, fontweight='bold')
-[plt.plot(stats[myxaxis], species[i], label=i, marker='.', zorder=10) for i in species]
+
+# numeral markers
+numeralmarkers = input('  > Use numeral markers? (True/def=False) : ') or False
+
+# plotting
+if numeralmarkers:
+    # if all are marked it gets too crowded
+    numberOfMarkers = 15
+    markEvery = max(int(len(stats[myxaxis])/numberOfMarkers), 1)
+    # number markers
+    [plt.plot(stats[myxaxis], species[i],
+              label=i, marker=f"$" + str(j) + "$", markerfacecolor = 'k', markeredgewidth=0.1,
+              markevery=markEvery, markersize=9,
+              zorder=10, linestyle=None)
+     for j, i in enumerate(species)]
+else:
+    [plt.plot(stats[myxaxis], species[i], label=i, marker='.', zorder=10) for i in species]
+
 
 plt.annotate('Species :', xy=(1.02, .95), xycoords='axes fraction', fontweight='bold')
 

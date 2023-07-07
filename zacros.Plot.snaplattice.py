@@ -96,8 +96,8 @@ ax.set_aspect('equal', adjustable='box')
 # add sites
 for itype in list(site_type.keys()):
     plt.scatter(site_type[itype]['x'], site_type[itype]['y'],
-                alpha=.1, marker='o', s=80
-                , edgecolors='k'
+                alpha=.15, marker='o', s=80, edgecolors='k',
+                zorder=2
                 )
 
 # add box
@@ -113,7 +113,8 @@ for ispecie in snapspecies:
         plt.scatter([site_dict[j]['position'][0] for j in snapspecies[ispecie]],
                     [site_dict[j]['position'][1] for j in snapspecies[ispecie]],
                     label=species_dct[ispecie],
-                    s=60, marker='D', alpha=.9
+                    marker='$'+str(ispecie)+'$',
+                    s=60, alpha=.9, zorder=4
                     )
 
 # Titles and legend --------------------------------------------------
