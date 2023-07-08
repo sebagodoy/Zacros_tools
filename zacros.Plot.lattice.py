@@ -56,6 +56,18 @@ for itype in list(site_type.keys()):
 #    for i in list(site_dict.keys()):
 #        for j in site_dict[i]['neighbours']:
 
+try:
+    while True:
+        addthis = int(input('  > Add site number  (def=False/*=True)? : '))
+        #plt.scatter(site_dict[addthis]['position'][0],
+        #            site_dict[addthis]['position'][1],
+        #            marker='$'+str(addthis)+'$', color='k', s=20)
+        plt.annotate(str(addthis),
+                     xy=(site_dict[addthis]['position'][0], site_dict[addthis]['position'][1]),
+                     xycoords='data', va='center', ha='center')
+except ValueError:
+    pass
+
 # add box
 if input('  > Add box (*/def=False) ?: '):
     draw_box = [[0,0], lat_cell[0], [i+j for i, j in zip(lat_cell[0], lat_cell[1])], lat_cell[1], [0,0]]
