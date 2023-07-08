@@ -62,7 +62,7 @@ print('done!')
 print('  > Reading history ', end='... ')
 with open('./history_output.txt') as h:
     snapfile = h.readlines()
-
+print('done')
 # create dictionaries to parse
 # species dict: {1: SpecieName1, 2: SpecieName2, ... }
 species_dct = {i+1:j for i,j in enumerate(snapfile[1].split()[1:])}
@@ -70,12 +70,31 @@ species_dct = {i+1:j for i,j in enumerate(snapfile[1].split()[1:])}
 snapspecies = {i:[] for i in list(species_dct.keys())} # {specie number : [site list]}
 
 
+# ---- which snap?
+try:
+    snapnumber = int(input('  > Snapshot number (def=last) : ') or None)
+    # None or input error trigger TypeError and last snap is used
+    iLine = 0
+    while iLine<len(snapfile):
+        if 'configuration' in snapfile[iLine]:
+            if int(snapfile[iLine].split()[1]) == int(snapnumber):
+                print('  > found snapshot N°'+str(snapnumber), end=' ... ')
+                break
+            else:
+                iLine +=1
+        else:
+            iLine+=1
+except TypeError:
+    # find starting last snap
+    iLine = len(snapfile)-1
+    while iLine>0 and 'configuration' not in snapfile[iLine]:
+        iLine-=1
+    snapnumber = int(snapfile[iLine].split()[1])
+    print('  > found last snap, snap N°'+str(snapnumber), end=' ... ')
+pastevents = int(snapfile[iLine].split()[2])
 
-# find starting last snap
-iLine = len(snapfile)-1
-while iLine>0 and 'configuration' not in snapfile[iLine]:
-    iLine-=1
-print('found last snap', end='... ')
+
+
 
 # Fill snapspecies with last snapshot
 try:
@@ -100,7 +119,12 @@ plt.subplots_adjust(left=0.09, right=0.94-.11*ncolspecies+.01*(ncolspecies-1),
                     top=0.95, bottom=0.12)
 ax.set_aspect('equal', adjustable='box')
 
-
+plt.annotate('Snapshot :' + str(snapnumber), xy=(1.02, .1), xycoords='axes fraction',
+             fontweight='bold')
+plt.annotate('Prev Events :' + str(pastevents), xy=(1.02, .05), xycoords='axes fraction',
+             fontweight='bold')
+plt.annotate('Next KMC step :' + str(pastevents+1), xy=(1.02, .01), xycoords='axes fraction',
+             fontweight='bold')
 # add sites
 for itype in list(site_type.keys()):
     plt.scatter(site_type[itype]['x'], site_type[itype]['y'],
@@ -115,7 +139,7 @@ if input('  > Add box (*/def=False) ?: '):
     plt.plot([i[0] for i in draw_box], [i[1] for i in draw_box], color='k', alpha=.5, linestyle='dashed')
 
 # add species
-print('  >  Plotting species ', end='... ')
+print('  > Plotting species ', end='... ')
 for ispecie in snapspecies:
     if len(snapspecies[ispecie]) == 0:
         pass

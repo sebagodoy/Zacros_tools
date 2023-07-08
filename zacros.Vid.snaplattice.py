@@ -59,14 +59,34 @@ print('done!')
 
 # -----------------------------------------------------------------------
 # Read history
-print('  > Reading history ', end='... ')
+print('  > Reading history')
 with open('./history_output.txt') as h:
     snapfile = h.readlines()
 # Prepare to plot
 import os
-os.mkdir('snapcollection')
+try:
+    os.mkdir('snapcollection')
+except FileExistsError:
+    os.system('rm -r ./snapcollection')
+    os.mkdir('snapcollection')
 snapCounter = 0
+
+
+# ------------------------------------------------------------------------
+# create dictionaries to parse
+#   species_dct: (species dict): {1: SpecieName1, 2: SpecieName2, ... }
+#   snapspecies (species in sites dict): {1: [], 2:[], 3:[] , ...}
+species_dct = {i + 1: j for i, j in enumerate(snapfile[1].split()[1:])}
+snapspecies = {i: [] for i in list(species_dct.keys())}  # {specie number : [site list]}
+
+# plotting lattice
 import matplotlib.pyplot as plt
+ncolspecies = int(len(species_dct) / 8) if int(len(species_dct) / 8) > 0 else 1
+fig, ax = plt.subplots(1, 1, figsize=(7 + 1.06 * ncolspecies, 4.), dpi=80)
+plt.subplots_adjust(left=0.09, right=0.94 - .11 * ncolspecies + .01 * (ncolspecies - 1),
+                    top=0.95, bottom=0.12)
+ax.set_aspect('equal', adjustable='box')
+qDrawBox = input('  > Add box (*/def=False) ?: ') or False
 
 # -----------------------------------------------------------------------
 # find starting last snap
@@ -75,22 +95,18 @@ while iLine<len(snapfile):
     if not 'configuration' in snapfile[iLine]:
         iLine+=1
     else:
-        print('found snap', end='... ')
         snapCounter +=1
-        # Get config info
+        # ---- Get config info ---------------------------------------------------------------
         nconfig = int(snapfile[iLine].split()[1])
         nevents = int(snapfile[iLine].split()[2])
         ntime = float(snapfile[iLine].split()[3])
         ntemp = float(snapfile[iLine].split()[4])
         nEng = float(snapfile[iLine].split()[5])
 
-        # create dictionaries to parse
-        # species dict: {1: SpecieName1, 2: SpecieName2, ... }
-        species_dct = {i+1:j for i,j in enumerate(snapfile[1].split()[1:])}
-        # species in sites dict: {1: [], 2:[], 3:[] , ...}
-        snapspecies = {i:[] for i in list(species_dct.keys())} # {specie number : [site list]}
-
-        # Fill snapspecies with snapshot
+        # ---- Get and parse snapshot --------------------------------------------------------
+        # Clean snapspecies
+        snapspecies = {i: [] for i in list(species_dct.keys())} # {specie number : [site list]}
+        # Fill snapspecies with snapshot info of occupied sites
         try:
             for isite in range(nsites):
                 thisSite = snapfile[iLine+isite+1].split()
@@ -98,31 +114,22 @@ while iLine<len(snapfile):
                     snapspecies[int(thisSite[2])].append(int(thisSite[0]))
         except IndexError:
             print('  > '+'!'*80)
-            print('  > '+'!'*4+' The last snapshot is not complete, check what happened!')
+            print('  > '+'!'*4+' Snapshot N°'+str(snapCounter)+'is not complete, check what happened!')
             print('  > ' + '!' * 80)
             quit()
-        print('got it!')
+        print('.', end='')
 
-        # ----------------------------------------------------------------------
-        # plotting lattice
-        ncolspecies = int(len(species_dct)/8) if int(len(species_dct)/8) > 0 else 1
-        fig, ax = plt.subplots(1,1, figsize=(7+1.06*ncolspecies,4.), dpi=80)
-        plt.subplots_adjust(left=0.09, right=0.94-.11*ncolspecies+.01*(ncolspecies-1),
-                            top=0.95, bottom=0.12)
-        ax.set_aspect('equal', adjustable='box')
-
-
+        # ---- Plot --------------------------------------------------------------------------
         # add lattice
         for itype in list(site_type.keys()):
             plt.scatter(site_type[itype]['x'], site_type[itype]['y'],
                         alpha=.15, marker='o', s=80, edgecolors='k',
                         zorder=2
                         )
-
         # add box
-        #if input('  > Add box (*/def=False) ?: '):
-        #    draw_box = [[0,0], lat_cell[0], [i+j for i, j in zip(lat_cell[0], lat_cell[1])], lat_cell[1], [0,0]]
-        #    plt.plot([i[0] for i in draw_box], [i[1] for i in draw_box], color='k', alpha=.5, linestyle='dashed')
+        if qDrawBox:
+            draw_box = [[0,0], lat_cell[0], [i+j for i, j in zip(lat_cell[0], lat_cell[1])], lat_cell[1], [0,0]]
+            plt.plot([i[0] for i in draw_box], [i[1] for i in draw_box], color='k', alpha=.5, linestyle='dashed')
 
         # add species
         for ispecie in snapspecies:
@@ -148,16 +155,18 @@ while iLine<len(snapfile):
         plt.legend(loc='upper left', bbox_to_anchor=(1., .95))
 
         plt.savefig('./snapcollection/'+str(snapCounter).zfill(4)+'.png')
-        plt.clf()
         #plt.show()
 
-
-        # -----------------------------------------------------------------------
+        # ---- Next step ---------------------------------------------------------------------
         # Prepare for next step
+        ax.clear()
         iLine += 1
+        print('.', end='')
 
+
+print()
 speed = 3 if snapCounter > 20 else 2
-os.system('ffmpeg -r 2 -i snapcollection/%04d.png out.mp4')
+os.system('ffmpeg -r '+str(speed)+' -i snapcollection/%04d.png history_output.mp4')
 os.system('rm -r ./snapcollection')
 print('  > Completed! check out.mp4')
 
